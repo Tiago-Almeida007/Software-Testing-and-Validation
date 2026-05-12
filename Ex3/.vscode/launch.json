@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "c:/Users/hmgc2/OneDrive/Documentos/Software-Testing-and-Validation/Ex3/TreeTable/Ex3ConcTestSuite",
+      "program": "c:/Users/hmgc2/OneDrive/Documentos/Software-Testing-and-Validation/Ex3/TreeTable/Ex3ConcTestSuite/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
