@@ -68,7 +68,30 @@ report:
       class: tp
       description: "Call to memcpy lacks boundary checks. Furthermore, at line 123, field->entries is replaced without freeing the old pointer, causing a leak."
       recommendation: "Free 'field->entries' before assigning the new 'entries' pointer."
+  
     #BUG-10
+  - bug:
+      type: "Insecure API (memcpy)"
+      lineno: 132
+      class: tp
+      description: "Call to function 'memcpy' is insecure as it does not provide security checks introduced in the C11 standard."
+      recommendation: "Ensure source and destination buffers are properly sized, or use memcpy_s."
+    #BUG-11
+  - bug:
+      type: "Insecure API (memcpy)"
+      lineno: 138
+      class: tp
+      description: "Call to function 'memcpy' is insecure as it lacks boundary checks when moving elements during deletion."
+      recommendation: "Verify array bounds before copying, or replace with memcpy_s."
+    #BUG-12
+  - bug:
+      type: "Insecure API (memcpy)"
+      lineno: 156
+      class: tp
+      description: "Call to function 'memcpy' in hashmap_get is insecure as it does not provide bounds checking."
+      recommendation: "Ensure the allocated buffer 'val' is large enough for 'entry->len' bytes."
+      
+    #BUG-13
   - bug:
       type: Memory Leak
       lineno: 170
