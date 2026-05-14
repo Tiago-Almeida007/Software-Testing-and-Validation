@@ -3,30 +3,35 @@
 
 report:
   # --- Infer Results ---
+    #BUG-1
   - bug:
       type: Null Dereference
       lineno: 76
       class: tp
       description: "The pointer 'map' (assigned at line 61) is dereferenced at line 76 without a NULL check after malloc."
       recommendation: "Add a NULL check after the allocation of 'map'."
+    #BUG-2
   - bug:
       type: Memory Leak
       lineno: 130
       class: tp
       description: "Memory allocated for 'entries' at line 118 is leaked if the function proceeds to update an existing key instead of inserting a new one."
       recommendation: "Free the newly allocated 'entries' buffer if it is not used, or restructure the logic to allocate only when necessary."
+    #BUG-3
   - bug:
       type: Memory Leak
       lineno: 156
       class: tp
       description: "Memory dynamically allocated for 'val' at line 155 is returned to the caller, but the caller (main) does not free it."
       recommendation: "The caller of hashmap_get must free the returned pointer."
+    #BUG-4
   - bug:
       type: Null Dereference
       lineno: 156
       class: tp
       description: "The pointer 'val' (assigned at line 155) is passed to memcpy without verifying it is not NULL."
       recommendation: "Add a check to verify 'val != NULL' before the memcpy operation."
+    #BUG-5
   - bug:
       type: Nullptr Dereference
       lineno: 163
@@ -35,30 +40,35 @@ report:
       recommendation: "Check the return value of hashmap_new() in main."
 
   # --- Clang-Analyzer Results ---
+    #BUG-6
   - bug:
       type: Nullptr Dereference
       lineno: 72
       class: tp
       description: "Access to field 'size' results in a dereference of a null pointer if 'fields' allocation failed at line 64."
       recommendation: "Verify 'fields' is not NULL before entering the loop."
+    #BUG-7
   - bug:
       type: "Incompatible Sizeof Operand"
       lineno: 124
       class: tp
       description: "malloc(sizeof(key)) allocates memory for the size of the pointer (char*) instead of the string length."
       recommendation: "Use strlen(key) + 1 to allocate the correct amount of memory."
+    #BUG-8
   - bug:
       type: "Insecure API (strcpy)"
       lineno: 125
       class: tp
       description: "strcpy is used to copy the key into a buffer that was incorrectly sized at line 124, leading to a buffer overflow."
       recommendation: "Use strlcpy or ensure the destination buffer is large enough (strlen + 1)."
+    #BUG-9
   - bug:
       type: "Insecure API (memcpy)"
       lineno: 120
       class: tp
       description: "Call to memcpy lacks boundary checks. Furthermore, at line 123, field->entries is replaced without freeing the old pointer, causing a leak."
       recommendation: "Free 'field->entries' before assigning the new 'entries' pointer."
+    #BUG-10
   - bug:
       type: Memory Leak
       lineno: 170
