@@ -14,7 +14,7 @@ report:
   - bug:
       type: Memory Leak
       lineno: 130
-      class: tp
+      class: fp
       description: "Memory allocated for 'entries' at line 118 is leaked if the function proceeds to update an existing key instead of inserting a new one."
       recommendation: "Free the newly allocated 'entries' buffer if it is not used, or restructure the logic to allocate only when necessary."
     #BUG-3
