@@ -1,32 +1,22 @@
 /*
-* Property: initially, when the tree is empty, there is no key greater than any given key. After adding a key-value pair, there is no 
-* key greater than the added key. Then, after adding a second key-value pair, if the first key is smaller than the second key, the 
-* second key is the only key greater than the first key, and there is no key greater than the second key. If the first key is greater 
-* than the second key, the first key is the only key greater than the second key, and there is no key greater than the first key. If 
-* the two keys are equal, the tree contains only the first key, and there is no key greater than the first key.
+* Property: adding a key-value pair, the successor of the inserted key (if it exists) is the smallest key in the tree that is greater than the inserted key, and the predecessor of the inserted key (if it exists) must be correctly returned
 */
 
-#include <klee/klee.h>
 #include <assert.h>
+#include <stdio.h>
 #include "../treetable.h"
 
-int main() {
+void test_concrete(int key1, int key2) {
     TreeTable *t;
     treetable_new(&t);
 
-    int key1, key2;
     char val = 'v';
     void *out = NULL;
 
-    klee_make_symbolic(&key1, sizeof(key1), "key1");
-    klee_make_symbolic(&key2, sizeof(key2), "key2");
-
-    //The treetable implementation crashes if we try to get the first key of an empty table, it's why we comment the following lines. 
     assert (treetable_get_greater_than(t, &key1, &out) == CC_ERR_KEY_NOT_FOUND);
     assert (out == NULL);
 
     treetable_add(t, &key1, &val);
-
     assert (treetable_get_greater_than(t, &key1, &out) == CC_OK);
     assert (out == NULL);
 
@@ -49,5 +39,16 @@ int main() {
         
 
     treetable_destroy(t);
+}
+
+int main() {
+    /* Test values from test000001.ktest */
+    test_concrete(0,0);
+    /* Test values from test000002.ktest */
+    test_concrete(1,0);
+    /* Test values from test000003.ktest */
+    test_concrete(-1979711488,0);
+
+    printf ("All concrete tests passed.\n");
     return 0;
 }

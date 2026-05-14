@@ -1,0 +1,23 @@
+# Pastas de output do KLEE
+klee-out-*/
+klee-last/
+
+# Ficheiros binários do LLVM
+*.bc
+*.ll
+
+# Ficheiros de cobertura
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+*.gcov
+
+# Binários executáveis (Linux e Windows)
+*.exe
+*_cov
+linked_*
+
+# Pastas de IDE
+.vscode/
+.idea/

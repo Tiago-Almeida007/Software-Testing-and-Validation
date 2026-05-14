@@ -7,27 +7,28 @@
 #include <stdio.h>
 #include "../treetable.h"
 
-void test_concrete_get(int key1) {
+void test_concrete(int key1) {
     TreeTable *t;
     treetable_new(&t);
 
-    char val1 = 'v';
+    char val = 'v';
     void *out=NULL;
 
     assert (treetable_get(t, &key1, &out) == CC_ERR_KEY_NOT_FOUND);
     assert (out == NULL);
 
-    treetable_add(t, &key1, &val1);
+    treetable_add(t, &key1, &val);
 
     assert (treetable_get(t, &key1, &out) == CC_OK);
-    assert (out == &val1);
+    assert (out == &val);
 
     treetable_destroy(t);
 }
 
 int main() {
-    test_concrete_get(0); // from test000001.ktest
+    /* Test values from test000001.ktest */
+    test_concrete(0);
+    
     printf ("All concrete tests passed.\n");
-
     return 0;
 }
