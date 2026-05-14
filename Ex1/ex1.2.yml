@@ -1,55 +1,18 @@
 report:
-  # 1. Off-by-one / Logic Error in Hashing (FN)
+  # BUG-11
   - bug:
       type: Logic Error / Off-by-one
-      lineno: 110
+      lineno: 100
       class: fn
       description: |
         Not found by any tool.
-        In hashmap_set (line 110) and hashmap_get (line 146), the code calls hashmap_hash(key, map->size - 1). 
+        In hashmap_set and hashmap_get, the code calls hashmap_hash(key, map->size - 1). 
         The hash function uses the second argument as a modulo. If map->size is 8, the modulo used is 7, 
         meaning the hash will only ever produce indices 0 through 6. The 8th bucket (index 7) is 
         completely unreachable, wasting memory and increasing collision rates.
       recommendation: "Change the call to hashmap_hash(key, map->size) to utilize the full range of the table."
 
-  # 2. Major Memory Leak in hashmap_free (FN)
-  - bug:
-      type: Memory Leak
-      lineno: 93
-      class: fn
-      description: |
-        Not found by any tool.
-        The function hashmap_free iterates through all fields and entries to deallocate memory. 
-        While it frees entry->key (line 93), it never calls free() on entry->val. Since values 
-        are heap-allocated in hashmap_set, this causes a memory leak for every single value 
-        stored in the map when it is destroyed.
-      recommendation: "Add free(entry->val) before freeing the key or the entries array."
 
-  # 3. Memory Leak during Value Update (FN)
-  - bug:
-      type: Memory Leak
-      lineno: 114
-      class: fn
-      description: |
-        Not found by any tool.
-        In hashmap_set, if a key already exists, the code allocates a new buffer for the 
-        new value (line 113) and overwrites entry->val (line 114). The pointer to the 
-        previous value is lost without being freed.
-      recommendation: "Call free(entry->val) before assigning the new pointer if the key already exists."
-
-  # 4. Memory Leak during Entry Deletion (FN)
-  - bug:
-      type: Memory Leak
-      lineno: 135
-      class: fn
-      description: |
-        Not found by any tool.
-        In hashmap_set, when value == NULL (deletion logic), the code frees entry->key 
-        but fails to free entry->val. This leaks the memory of the value associated with 
-        the deleted key.
-      recommendation: "Add free(entry->val) inside the else block where the key is freed."
-
-  # 5. Incorrect Buffer Allocation / Sizeof Bug (TP)
   - bug:
       type: Buffer Overflow / Logic Error
       lineno: 124
@@ -61,19 +24,6 @@ report:
         This leads to a buffer overflow when strcpy is called on the next line.
       recommendation: "Use strlen(key) + 1 to allocate the correct amount of space."
 
-  # 6. Memory Leak of Field Entries (TP)
-  - bug:
-      type: Memory Leak
-      lineno: 123
-      class: tp
-      description: |
-        Found with clang-analyzer.
-        When adding a new entry, a new 'entries' array is allocated (line 118) and the 
-        old data is copied over. However, field->entries is updated to the new pointer 
-        (line 127) without the old array being freed.
-      recommendation: "Store the old pointer and free() it after the memcpy is successful."
-
-  # 7. Null Dereference after Failed Allocation (TP)
   - bug:
       type: Nullptr Dereference
       lineno: 76
@@ -85,7 +35,7 @@ report:
         resulting in a null pointer dereference (or use-after-free).
       recommendation: "Add an immediate return NULL if any allocation fails."
 
-  # 8. Memory Leak in main (TP)
+ 
   - bug:
       type: Memory Leak
       lineno: 170
