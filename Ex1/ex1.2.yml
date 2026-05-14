@@ -1,48 +1,122 @@
 report:
-  # BUG-11
+  #BUG-1
   - bug:
-      type: Logic Error / Off-by-one
-      lineno: 100
-      class: fn
-      description: |
-        Not found by any tool.
-        In hashmap_set and hashmap_get, the code calls hashmap_hash(key, map->size - 1). 
-        The hash function uses the second argument as a modulo. If map->size is 8, the modulo used is 7, 
-        meaning the hash will only ever produce indices 0 through 6. The 8th bucket (index 7) is 
-        completely unreachable, wasting memory and increasing collision rates.
-      recommendation: "Change the call to hashmap_hash(key, map->size) to utilize the full range of the table."
-
-
-  - bug:
-      type: Buffer Overflow / Logic Error
-      lineno: 124
-      class: tp
-      description: |
-        Found with clang-analyzer.
-        The code uses malloc(sizeof(key)) to allocate space for the key string. Since 'key' 
-        is a pointer (char*), this only allocates 4 or 8 bytes regardless of the string length. 
-        This leads to a buffer overflow when strcpy is called on the next line.
-      recommendation: "Use strlen(key) + 1 to allocate the correct amount of space."
-
-  - bug:
-      type: Nullptr Dereference
+      type: Null Dereference
       lineno: 76
       class: tp
+      description: "Infer: The pointer 'map' is dereferenced at line 76 without a NULL check after malloc."
+      recommendation: "Add a NULL check immediately after map allocation."
+  #BUG-2
+  - bug:
+      type: Nullptr Dereference
+      lineno: 72
+      class: tp
+      description: "Clang-Analyzer: Access to field 'size' results in a dereference of a null pointer if 'fields' allocation failed at line 64."
+      recommendation: "Return NULL if the fields allocation fails."
+  #BUG-3
+  - bug:
+      type: Incompatible Sizeof Operand
+      lineno: 124
+      class: tp
+      description: "Clang-Analyzer: malloc(sizeof(key)) allocates memory for the size of the pointer (8 bytes) instead of the string length."
+      recommendation: "Use strlen(key) + 1."
+  #BUG-4
+  - bug:
+      type: Insecure API (strcpy)
+      lineno: 125
+      class: tp
+      description: "Clang-Analyzer: strcpy is used to copy the key into a buffer incorrectly sized at line 124, leading to a buffer overflow."
+      recommendation: "Ensure the destination buffer is large enough and use secure alternatives."
+  #BUG-5
+  - bug:
+      type: Insecure API (memcpy) / Memory Leak
+      lineno: 120
+      class: tp
+      description: "Clang-Analyzer: Call to memcpy lacks boundary checks. Additionally, field->entries is later replaced without freeing this old pointer, causing a leak."
+      recommendation: "Free old field->entries before assigning the new one."
+  #BUG-6
+  - bug:
+      type: Memory Leak
+      lineno: 130
+      class: fp
       description: |
-        Found with Infer.
-        In hashmap_new, if the second malloc (line 64) fails, the program frees 'map' 
-        but does not return. It proceeds to line 76 and attempts to write to map->size, 
-        resulting in a null pointer dereference (or use-after-free).
-      recommendation: "Add an immediate return NULL if any allocation fails."
-
- 
+        Reported by Infer. Infer claimed memory allocated for 'entries' at line 118 is leaked during an update. 
+        However, if the key is found earlier in the loop, 'goto set_val;' is executed, completely skipping 
+        the 'entries' malloc. Thus, no memory is leaked in this path.
+      recommendation: "None required (False Positive)."
+  #BUG-7
+  - bug:
+      type: Insecure API (memcpy)
+      lineno: 132
+      class: tp
+      description: "Clang-Analyzer: Call to function 'memcpy' (setting value) is insecure as it does not provide C11 security checks."
+      recommendation: "Ensure source and destination buffers are properly sized."
+  #BUG-8
+  - bug:
+      type: Insecure API (memcpy)
+      lineno: 138
+      class: tp
+      description: "Clang-Analyzer: Call to function 'memcpy' is insecure as it lacks boundary checks when moving elements during deletion."
+      recommendation: "Verify array bounds strictly before copying."
+  #BUG-9
+  - bug:
+      type: Memory Leak
+      lineno: 156
+      class: tp
+      description: "Infer: Memory dynamically allocated for 'val' at line 155 is returned to the caller, but the caller does not free it."
+      recommendation: "The caller must free the returned pointer."
+  #BUG-10
+  - bug:
+      type: Null Dereference / Insecure API
+      lineno: 156
+      class: tp
+      description: "Infer / Clang-Analyzer: The pointer 'val' is passed to memcpy without verifying it is not NULL. Clang also flags this memcpy as insecure."
+      recommendation: "Add a NULL check before the memcpy operation."
+  #BUG-11
+  - bug:
+      type: Nullptr Dereference
+      lineno: 163
+      class: tp
+      description: "Infer: In main(), hashmap_new() can return NULL, but the result is passed into hashmap_set without checking."
+      recommendation: "Check the return value of hashmap_new() in main."
+  #BUG-12
   - bug:
       type: Memory Leak
       lineno: 170
       class: tp
+      description: "Clang-Analyzer: The memory returned by hashmap_get into 'ret' is never freed before main exits."
+      recommendation: "Call free(ret) after use in main."
+
+  # ==========================================
+  # FALSE NEGATIVES (Found manually, missed by tools)
+  # ==========================================
+  #BUG-13
+  - bug:
+      type: Nullptr Dereference
+      lineno: 120
+      class: fn
       description: |
-        Found with Clang-analyzer .
-        The function hashmap_get allocates a new buffer and returns it. In the main() 
-        function, this returned pointer is stored in 'ret', used in an assertion, 
-        but never freed before the program exits.
-      recommendation: "Call free(ret) after the assertion in main()."
+        Not found by any tool. (Tools flagged the memcpy as insecure, but missed the crash).
+        In hashmap_set, 'entries' is dynamically allocated at line 118. If malloc fails, 
+        passing the NULL pointer directly to memcpy at line 120 will cause a segmentation fault.
+      recommendation: "Add 'if (!entries) { field->size--; return; }' before the memcpy."
+  #BUG-14
+  - bug:
+      type: Nullptr Dereference
+      lineno: 125
+      class: fn
+      description: |
+        Not found by any tool. (Tools flagged the strcpy as a buffer overflow, but missed the crash).
+        In hashmap_set, 'entry->key' is dynamically allocated at line 124. If malloc fails, 
+        passing the NULL pointer to strcpy at line 125 will cause a crash.
+      recommendation: "Add 'if (!entry->key) { free(entries); field->size--; return; }' before strcpy."
+  #BUG-15
+  - bug:
+      type: Nullptr Dereference
+      lineno: 131
+      class: fn
+      description: |
+        Not found by any tool. (Infer caught this in hashmap_get, but completely missed it here).
+        In hashmap_set, 'val' is dynamically allocated at line 130. If malloc fails, it is 
+        immediately passed to memcpy at line 131, causing a null pointer dereference.
+      recommendation: "Add 'if (!val) return;' before the memcpy."
