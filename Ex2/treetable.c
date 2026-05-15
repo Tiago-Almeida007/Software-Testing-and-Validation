@@ -563,13 +563,13 @@ int sorted(TreeTable *t) {
     if (treetable_size(t) <= 1) return 1;
     return aux_sorted(t->root, t, NULL, NULL);
 }
-//Needs min max to propagate and go in deph
+//Needs min max to propagate and go in deph to catch the tricky trees   
 static int aux_sorted(RBNode *node, TreeTable *t, void *min, void *max) {
-    if (node == NULL || node == t->sentinel) return 1;
+    if (node == NULL || node == t->sentinel) {return 1;} 
 
-    if (min != NULL && t->cmp(node->key, min) <= 0) return 0;
-    if (max != NULL && t->cmp(node->key, max) >= 0) return 0;
+    //Checks (se key <= min (nao null) || key >= max (nao null)=> not sorted)
+    if (min != NULL && t->cmp(node->key, min) <= 0) {return 0;}
+    if (max != NULL && t->cmp(node->key, max) >= 0) {return 0;}
 
-    return aux_sorted(node->left,  t, min, node->key)
-        && aux_sorted(node->right, t, node->key, max);
+    return aux_sorted(node->left,  t, min, node->key) && aux_sorted(node->right, t, node->key, max);
 }
