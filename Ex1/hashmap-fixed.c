@@ -68,9 +68,9 @@ hashmap_t hashmap_new(int size) {
       (struct hashmap_field *)malloc(sizeof(struct hashmap_field) * size);
 
   /* BUG-2 */
-  if (!fields) {
-    free(map);
-  }
+  //if (!fields) {
+  //  free(map);
+  //}
   /* Fixes 2 */
   if (!fields) {
     free(map);
@@ -138,16 +138,16 @@ void hashmap_set(hashmap_t map, char *key, void *value, size_t length) {
   entry = &entries[field->size - 1];
   
   /* BUG-3 */
-  entry->key = (char *)malloc(sizeof(key));
+  // entry->key = (char *)malloc(sizeof(key));
   /* Fixes 3 */
   entry->key = (char *)malloc(strlen(key) + 1);
   
   /* BUG-14 */
   /* BUG-4 */
-  strcpy(entry->key, key);
+  // strcpy(entry->key, key);
   /* Fixes 14 */
-  /* Fixes 4 */
   if (!entry->key) { free(entries); field->size--; return; }
+  /* Fixes 4 */
   strncpy(entry->key, key, strlen(key) + 1);
 
   /* BUG-5 */
@@ -164,7 +164,7 @@ set_val:
     if (!val) return;
     
     /* BUG-7 */
-    entry->val = memcpy(val, value, length);
+    // entry->val = memcpy(val, value, length);
     /* Fixes 7 */
     if (value) entry->val = memcpy(val, value, length);
     
@@ -174,8 +174,8 @@ set_val:
     field->size--;
     if (entry != (field->entries + field->size)) {
       /* BUG-8 */
-      memcpy((void *)entry, (void *)(field->entries + field->size),
-             sizeof(struct hashmap_entry));
+      // memcpy((void *)entry, (void *)(field->entries + field->size),
+      //       sizeof(struct hashmap_entry));
       /* Fixes 8 */
       memmove((void *)entry, (void *)(field->entries + field->size),
              sizeof(struct hashmap_entry));
@@ -196,7 +196,7 @@ void *hashmap_get(hashmap_t map, char *key) {
     if (strcmp(entry->key, key) == 0) {
       void *val = malloc(entry->len);
       /* BUG-10 */
-      return memcpy(val, entry->val, entry->len);
+      //return memcpy(val, entry->val, entry->len);
       /* Fixes 10 */
       if (!val) return NULL;
       return memcpy(val, entry->val, entry->len);
@@ -220,7 +220,7 @@ int main() {
 
   /* BUG-9 */
   /* BUG-12 */
-  hashmap_free(map);
+  // hashmap_free(map);
   /* Fixes 9 */
   /* Fixes 12 */
   free(ret);
