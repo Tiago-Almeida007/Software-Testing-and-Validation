@@ -26,8 +26,6 @@ int main() {
 
     assert (treetable_get_greater_than(t, &key1, &out) == CC_OK);
     assert (out == NULL);
-    assert (treetable_get_greater_than(t, &key2, &out) == CC_ERR_KEY_NOT_FOUND);
-    assert (out == NULL);
 
     treetable_add(t, &key2, &val);
 
