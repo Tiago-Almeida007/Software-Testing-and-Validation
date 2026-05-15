@@ -24,7 +24,7 @@
    24|       |#include<stdlib.h>
    25|       |#include <stdio.h>
    26|       |
-   27|     50|#define RB_BLACK 1
+   27|     58|#define RB_BLACK 1
    28|     24|#define RB_RED   0
    29|       |
    30|       |
@@ -54,7 +54,7 @@
    54|       |static int aux_balanced(RBNode *rbn, TreeTable *t);
    55|       |static int rbnode_height(RBNode *rbn, TreeTable *t);
    56|       |static int check_balanced(RBNode *rbn, TreeTable *t);
-   57|       |static int aux_sorted(RBNode *node, TreeTable *t);
+   57|       |static int aux_sorted(RBNode *node, TreeTable *t, void *min, void *max);
    58|       |
    59|       |
    60|     57|int cmp(void const *e1, void const *e2) {
@@ -538,9 +538,9 @@
   538|      8|    int left_h  = check_balanced(rbn->left,  t);
   539|      8|    int right_h = check_balanced(rbn->right, t);
   540|       |
-  541|      8|    if (left_h == -1 || right_h == -1 || abs(left_h - right_h) > 1) return -1;
+  541|      8|    if (left_h == -1 || right_h == -1 || left_h != right_h) return -1;
   542|       |
-  543|      8|    return (left_h >= right_h ? left_h : right_h) + 1;
+  543|      8|    return (rbn->color == RB_BLACK ? 1 : 0) + left_h;
   544|      8|}
   545|       |
   546|       |
@@ -561,44 +561,16 @@
   561|       |//  and smaller then all keys to the right (subtree)
   562|      9|int sorted(TreeTable *t) {
   563|      9|    if (treetable_size(t) <= 1) return 1;
-  564|      2|    return aux_sorted(t->root, t);
+  564|      2|    return aux_sorted(t->root, t, NULL, NULL);
   565|      9|}
-  566|       |
-  567|     10|static int aux_sorted(RBNode *node, TreeTable *t) {
+  566|       |//Needs min max to propagate and go in deph
+  567|     10|static int aux_sorted(RBNode *node, TreeTable *t, void *min, void *max) {
   568|     10|    if (node == NULL || node == t->sentinel) return 1;
-  569|       |    //check if is bigger  than left and the rights of the left
-  570|      4|    RBNode *left_runner = node->left;
-  571|      5|    while (left_runner != NULL && left_runner != t->sentinel) {
-  572|      1|        if (t->cmp(left_runner->key, node->key) >= 0) return 0;
-  573|      1|        left_runner = left_runner->right; // rightmost of left must still be smaller
-  574|      1|    }
-  575|       |    //check if is smaller  than right and the lefts of the right
-  576|      4|    RBNode *right_runner = node->right;
-  577|      5|    while (right_runner != NULL && right_runner != t->sentinel) {
-  578|      1|        if (t->cmp(right_runner->key, node->key) <= 0) return 0;
-  579|      1|        right_runner = right_runner->left; // leftmost of right must still be greater
-  580|      1|    }
-  581|       |    //call fucntion for left and right
-  582|      4|    return aux_sorted(node->left, t) && aux_sorted(node->right, t);
-  583|      4|}
-  584|       |
-  585|       | /*    if (treetable_size(t) <= 1) return 1;
-  586|       |    void *prev_key = NULL;
-  587|       |    return aux_sorted(t->root, t, &prev_key); */
-  588|       |
-  589|       |
-  590|       |/* static int aux_sorted(RBNode *node, TreeTable *t, void **prev_key) {
-  591|       |    if (node == NULL || node == t->sentinel) return 1;
-  592|       |
-  593|       |    // Check left subtree
-  594|       |    if (!aux_sorted(node->left, t, prev_key)) return 0;
-  595|       |
-  596|       |    // Check current node against previous (in-order) key
-  597|       |    if (*prev_key != NULL && t->cmp(*prev_key, node->key) >= 0) return 0;
-  598|       |    *prev_key = node->key;
-  599|       |
-  600|       |    // Check right subtree
-  601|       |    return aux_sorted(node->right, t, prev_key);
-  602|       |}
-  603|       | */
+  569|       |
+  570|      4|    if (min != NULL && t->cmp(node->key, min) <= 0) return 0;
+  571|      4|    if (max != NULL && t->cmp(node->key, max) >= 0) return 0;
+  572|       |
+  573|      4|    return aux_sorted(node->left,  t, min, node->key)
+  574|      4|        && aux_sorted(node->right, t, node->key, max);
+  575|      4|}
 
